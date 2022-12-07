@@ -3,6 +3,9 @@ fun main() {
     open class MyFile(val name: String, val type: String, val onDir: MyFile?) {
         var size = 0
         var subItens = mutableListOf<MyFile>()
+        override fun toString(): String {
+            return "$name ${if (type == "dir") "(dir)" else "(file, $size)"}"
+        }
     }
 
     val fileSystem = MyFile("/", "dir", null)
@@ -29,6 +32,7 @@ fun main() {
         if (file == null) {
             file = MyFile(fileName, "file", fsPointer)
             file.size = size
+            fsPointer.subItens.add(file)
             var pointer = file.onDir
             while (pointer != null) {
                 pointer.size += size
@@ -43,9 +47,10 @@ fun main() {
             if (input[index].startsWith("$ cd "))
                 fsPointer = moveTo(input[index].substringAfter("$ cd "))
             else { //input[index].startsWith("$ ls")
-                while (index <= input.lastIndex && !input[index].startsWith("$")) {
+                index++
+                while (index < input.lastIndex && !input[index].startsWith("$")) {
                     if (input[index].startsWith("dir "))
-                        includeDir(fsPointer, input[index].substringAfter("$ cd "))
+                        includeDir(fsPointer, input[index].substringAfter("dir "))
                     else
                         includeFile(fsPointer, input[index])
                     index++
