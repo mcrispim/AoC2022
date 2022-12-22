@@ -62,12 +62,13 @@ fun main() {
 
     fun part2(input: List<String>): Long {
         val monkeyList = getInput(input)
-        for (round in 1..10_000) {
+        for (round in 1..20) {
             for (i in monkeyList.indices) {
                 processMonkey(i, monkeyList, withRelief = false)
             }
         }
-        val (counter1, counter2) = monkeyList.map { it.inspectionCounter }.sortedDescending().take(2)
+        val countersList = monkeyList.map { it.inspectionCounter }
+        val (counter1, counter2) = countersList.sortedDescending().take(2)
         return (counter1 * counter2).toLong()
     }
 
