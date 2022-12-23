@@ -9,6 +9,29 @@ fun main() {
         val testFalse: Int
     ) {
         var inspectionCounter = 0
+
+        fun processItems(monkeyList: List<Monkey>, relief: (Long) -> Long) {
+            while (items.isNotEmpty()) {
+                var item = items.removeAt(0)
+                val par = if (paramStr == "old") item else paramStr.toLong()
+                item = if (op == "+") item + par else item * par
+                item = relief(item)
+                if (item % testDivisor == 0L) {
+                    monkeyList[testTrue].items.add(item)
+                } else {
+                    monkeyList[testFalse].items.add(item)
+                }
+                inspectionCounter++
+            }
+        }
+    }
+
+    fun getCommonDivisor(monkeyList: List<Monkey>): Long {
+        var result = 1L
+        for (monkey in monkeyList) {
+            result *= monkey.testDivisor
+        }
+        return result
     }
 
     fun getInput(input: List<String>): List<Monkey> {
@@ -17,10 +40,7 @@ fun main() {
         while (lineCounter < input.size) {
             val firstLine = input[lineCounter++] // Monkey number
             if (firstLine.isBlank()) continue
-            val items = input[lineCounter++]
-                .substringAfter(":")
-                .split(",")
-                .map { it.trim { c -> c == ' ' }.toLong() }
+            val items = input[lineCounter++].substringAfter(":").split(",").map { it.trim { c -> c == ' ' }.toLong() }
                 .toMutableList()
             val operation = input[lineCounter++].substringAfter("old ").split(" ")
             val op = operation.first()
@@ -33,27 +53,11 @@ fun main() {
         return monkeyList
     }
 
-    fun processMonkey(monkeyIndex: Int, monkeyList: List<Monkey>, withRelief: Boolean) {
-        val monkey = monkeyList[monkeyIndex]
-        while (monkey.items.isNotEmpty()) {
-            var item = monkey.items.removeAt(0)
-            val par = if (monkey.paramStr == "old") item else monkey.paramStr.toLong()
-            item = if (monkey.op == "+") item + par else item * par
-            if (withRelief)
-                item /= 3
-            if (item % monkey.testDivisor == 0L)
-                monkeyList[monkey.testTrue].items.add(item)
-            else
-                monkeyList[monkey.testFalse].items.add(item)
-            monkey.inspectionCounter++
-        }
-    }
-
     fun part1(input: List<String>): Long {
         val monkeyList = getInput(input)
         for (round in 1..20) {
-            for (i in monkeyList.indices) {
-                processMonkey(i, monkeyList, withRelief = true)
+            for (monkey in monkeyList) {
+                monkey.processItems(monkeyList) { it / 3 }
             }
         }
         val (counter1, counter2) = monkeyList.map { it.inspectionCounter }.sortedDescending().take(2)
@@ -62,20 +66,21 @@ fun main() {
 
     fun part2(input: List<String>): Long {
         val monkeyList = getInput(input)
-        for (round in 1..20) {
-            for (i in monkeyList.indices) {
-                processMonkey(i, monkeyList, withRelief = false)
+        val cd = getCommonDivisor(monkeyList)
+        for (round in 1..10000) {
+            for (monkey in monkeyList) {
+                monkey.processItems(monkeyList) { (it % cd) + cd }
             }
         }
-        val countersList = monkeyList.map { it.inspectionCounter }
+        val countersList = monkeyList.map { it.inspectionCounter.toLong() }
         val (counter1, counter2) = countersList.sortedDescending().take(2)
-        return (counter1 * counter2).toLong()
+        return (counter1 * counter2)
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day11_test")
-    check(part1(testInput) == 10605L)
-    check(part2(testInput) == 2713310158L)
+    check(part1(testInput) == 10_605L)
+    check(part2(testInput) == 2_713_310_158L)
 
     val input = readInput("Day11")
     println(part1(input))
