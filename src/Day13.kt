@@ -83,6 +83,20 @@ fun areInOrder(left: String, right: String, level: Int): Boolean? {
         areInOrder(left, "[$right]", level + 1)
 }
 
+class Packet(val text: String) : Comparable<Packet> {
+    override fun compareTo(other: Packet): Int {
+        return when (areInOrder(left = this.text, right = other.text, level = 0)) {
+            true -> -1
+            false -> 1
+            null -> 0
+        }
+    }
+
+    override fun toString(): String {
+        return text
+    }
+
+}
 fun main() {
 
     fun part1(input: List<String>): Int {
@@ -102,17 +116,19 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        val packets: MutableList<String> = input.filter { it.isNotEmpty() }.toMutableList()
-        packets.add("[[2]]")
-        packets.add("[[6]]")
-
-        return input.size
+        val packets = input.filter { it.isNotEmpty() }.map { Packet(it) }.toMutableList()
+        packets.add(Packet("[[2]]"))
+        packets.add(Packet("[[6]]"))
+        val sortedPackets = packets.sorted()
+        val mark1 = sortedPackets.indexOfFirst { it.text == "[[2]]" } + 1
+        val mark2 = sortedPackets.indexOfFirst { it.text == "[[6]]" } + 1
+        return mark1 * mark2
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day13_test2")
     check(part1(testInput) == 13)
-    check(part2(testInput) == 23)
+    check(part2(testInput) == 140)
 
     val input = readInput("Day13")
     println(part1(input))
