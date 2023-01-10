@@ -1,137 +1,142 @@
+const val HOLE = 500
+
+data class Position(val line: Int, val col: Int)
+
 class Cave(input: List<String>) {
-    var minX = Int.MAX_VALUE
-    var maxX = Int.MIN_VALUE
-    var minY = 0
-    var maxY = Int.MIN_VALUE
+    private val area = mutableMapOf<Position, Char>()
+    private var minCol = Int.MAX_VALUE
+    private var maxCol = Int.MIN_VALUE
+    private var minLine = 0
+    private var maxLine = Int.MIN_VALUE
     var grains = 0
+    private val floor: Int
 
     init {
         for (line in input) {
             for (xys in line.split(" -> ")) {
                 val (x, y) = xys.split(",").map { it.toInt() }
-                if (x > maxX) maxX = x
-                if (x < minX) minX = x
-                if (y > maxY) maxY = y
-//                if (y < minY) minY = y
+                if (x > maxCol) maxCol = x
+                if (x < minCol) minCol = x
+                if (y > maxLine) maxLine = y
+                if (y < minLine) minLine = y
             }
         }
-    }
-    val floor = maxY + 1
-    val spaceAround = floor
-    val area = Array(floor) { Array(maxX - minX + (2 * spaceAround)) { '.' } }
-    val xCorrection = 500 - minX + spaceAround
+        floor = maxLine + 2
 
-    init {
         for (line in input) {
-            val xys = line.split(" -> ").windowed(2)
-            for (fromTo in xys) {
-                var (x1, y1) = fromTo[0].split(",").map { it.toInt() }
-                var (x2, y2) = fromTo[1].split(",").map { it.toInt() }
-                if (x1 == x2) {
-                    if (y1 > y2) {
-                        val tempY = y1
-                        y1 = y2
-                        y2 = tempY
+            val columnLine = line.split(" -> ").windowed(2)
+            for (fromTo in columnLine) {
+                var (col1, line1) = fromTo[0].split(",").map { it.toInt() }
+                var (col2, line2) = fromTo[1].split(",").map { it.toInt() }
+                if (col1 == col2) {
+                    if (line1 > line2) {
+                        val tempY = line1
+                        line1 = line2
+                        line2 = tempY
                     }
-                    for (y in y1..y2)
-                        area[y - 1][x1 - minX + 1] = '#'           // rock
+                    for (l in line1..line2)
+                        area[Position(l, col1)] = '#'           // rock
                 } else {
-                    if (x1 > x2) {
-                        val tempX = x1
-                        x1 = x2
-                        x2 = tempX
+                    if (col1 > col2) {
+                        val tempX = col1
+                        col1 = col2
+                        col2 = tempX
                     }
-                    for (x in x1..x2)
-                        area[y1 - 1][x - minX + 1] = '#'           // rock
+                    for (col in col1..col2)
+                        area[Position(line1, col)] = '#'           // rock
                 }
             }
         }
     }
 
+    fun dropSand1(): Boolean {
+        var col = HOLE
+        var line = 1
+        var lastLine = line
+        var desvio = isPossibleToFall(line, col)
+        while (desvio != null && line < maxLine) {
+            col += desvio
+            lastLine = line
+            line++
+            desvio = isPossibleToFall(line, col)
+        }
+        return if (desvio == null) {
+            area[Position(lastLine, col)] = 'o'
+            grains++
+            true
+        } else
+            false
+    }
+
+    fun dropSandTillFloor(): Boolean {
+        var col = HOLE
+        var line = 1
+        var lastLine = line
+        var desvio: Int? = isPossibleToFall(line, col) ?: return false
+        while (desvio != null) {
+            col += desvio
+            if (col < minCol)
+                minCol--
+            if (col > maxCol)
+                maxCol++
+            lastLine = line
+            line++
+            desvio = isPossibleToFall(line, col)
+        }
+        area[Position(lastLine, col)] = 'o'
+        grains++
+        return true
+    }
+
+    private fun isPossibleToFall(line: Int, col: Int): Int? {
+        if (line == floor)
+            return null
+        if (area[Position(line, col)] == null)
+            return 0
+        if (area[Position(line, col - 1)] == null)
+            return -1
+        if (area[Position(line, col + 1)] == null)
+            return 1
+        return null
+    }
+
     fun showCave() {
-        println("  ${".".repeat(500 - minX + 1)}+${".".repeat(maxX - 500 + 1)}")
-        for (y in 0 until maxY) {
-            print("${y} ")
-            for (x in 0..maxX - minX + 2) {
-                print(area[y][x])
+        println("  0 ${".".repeat(HOLE - minCol + 1)}+${".".repeat(maxCol - HOLE + 1)}")
+        for (line in 1 until floor) {
+            print("%3s ".format(line))
+            for (col in minCol - 1..maxCol + 1) {
+                print(area[Position(line, col)] ?: ".")
             }
             println()
         }
-    }
-
-    fun dropSand(toFloor: Boolean = false): Boolean {
-        var x = 500 - minX + 1
-        val startX = x
-        var y = 0
-        var lastX = x
-        var lastY = -1
-        while (isPossibleToFall(y, x, toFloor)) {
-            if (area[y][x] == '.') {
-                lastY = y
-                y++
-                continue
-            }
-            if (area[y][x - 1] == '.') {
-                lastX = x - 1
-                lastY = y
-                y++
-                x--
-                continue
-            }
-            lastX = x + 1
-            lastY = y
-            y++
-            x++
-        }
-        if (!toFloor) {
-            if (lastY < maxY - 1) {
-                area[lastY][lastX] = 'o'
-                grains++
-                return true
-            } else
-                return false
-        } else {
-
-                area[lastY][lastX] = 'o'
-                grains++
-            return lastY != 0
-        }
-    }
-
-    private fun isPossibleToFall(y: Int, x: Int, toFloor: Boolean = false): Boolean {
-        if (y == if (toFloor) floor else maxY)
-            return false
-        if (area[y][x] == '.')
-            return true
-        if (x >= 1 && area[y][x - 1] == '.')
-            return true
-        if (x <= maxX - minX - 1 && area[y][x + 1] == '.')
-            return true
-        return false
+        println("$floor ${"#".repeat(maxCol- minCol + 3)}")
     }
 }
+
 
 fun main() {
 
     fun part1(input: List<String>): Int {
         val cave = Cave(input)
-  //      cave.showCave()
-        while (cave.dropSand()) {
-  //          println()
-  //          cave.showCave()
+//        cave.showCave()
+        while (cave.dropSand1()) {
+//            println()
+//            cave.showCave()
         }
-        println(cave.grains)
+//        println("${cave.grains}")
         return cave.grains
     }
 
     fun part2(input: List<String>): Int {
         val cave = Cave(input)
-        cave.showCave()
-        while (cave.dropSand(toFloor = true)) {
-            println()
-            cave.showCave()
+//        cave.showCave()
+//        println()
+        while (cave.dropSandTillFloor()) {
+//            cave.showCave()
+//            println()
         }
-        return cave.grains
+//        cave.showCave()
+        return cave.grains + 1
     }
 
     // test if implementation meets criteria from the description, like:
