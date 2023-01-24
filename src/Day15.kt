@@ -4,12 +4,7 @@ data class PositionDay15(val x: Int, val y: Int)
 
 class CaveDay15(input: List<String>) {
     val area = mutableMapOf<PositionDay15, Char>()
-    /*
-        private var minX = Int.MAX_VALUE
-        private var maxX = Int.MIN_VALUE
-        private var minY = Int.MAX_VALUE
-        private var maxY = Int.MIN_VALUE
-    */
+    val covertAreas = mutableMapOf<PositionDay15, Int>()
 
     init {
         input.forEach {
@@ -27,18 +22,9 @@ class CaveDay15(input: List<String>) {
 
             area[sensor] = 'S'
             area[beacon] = 'B'
-            println("  Sensor: $sensorX, $sensorY ==> Beacon: $beaconX, $beaconY")
+//            println("  Sensor: $sensorX, $sensorY ==> Beacon: $beaconX, $beaconY")
             val distance = abs(sensor.x - beacon.x) + abs(sensor.y - beacon.y)
-
-            for (x in sensor.x - distance..sensor.x + distance) {
-                val dy = distance - abs(sensor.x - x)
-                for (y in sensor.y - dy..sensor.y + dy) {
-                    val pos = PositionDay15(x, y)
-                    if (area[pos] == null) {
-                        area[pos] = '#'
-                    }
-                }
-            }
+            covertAreas[sensor] = distance
         }
     }
 }
@@ -47,8 +33,17 @@ fun main() {
 
     fun part1(input: List<String>, line: Int): Int {
         val cave = CaveDay15(input)
-        val empties = cave.area.entries.filter { (pos, c) -> pos.y == line && c == '#' }.count()
-        return empties
+        val mainAreas = cave.covertAreas
+            .filter { (pos, dist) -> line in (pos.y - dist)..(pos.y + dist) }
+            .map { (pos, dist) ->
+                val d = dist - abs(pos.y - line)
+                pos.x - d..pos.x + d
+            }
+        var lineSet = setOf<Int>()
+        mainAreas.forEach { lineSet = lineSet.union(it) }
+        val empties = lineSet.size
+        val sensorsAndBeacons = cave.area.filter { (pos, c) -> pos.y == line }.count()
+        return empties - sensorsAndBeacons
     }
 
     fun part2(input: List<String>): Int {
