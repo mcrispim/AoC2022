@@ -42,7 +42,7 @@ fun main() {
         var lineSet = setOf<Int>()
         mainAreas.forEach { lineSet = lineSet.union(it) }
         val empties = lineSet.size
-        val sensorsAndBeacons = cave.area.filter { (pos, c) -> pos.y == line }.count()
+        val sensorsAndBeacons = cave.area.filter { (pos, _) -> pos.y == line }.count()
         return empties - sensorsAndBeacons
     }
 
