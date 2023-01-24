@@ -3,7 +3,7 @@ const val HOLE = 500
 data class Position(val line: Int, val col: Int)
 
 class Cave(input: List<String>) {
-    private val area = mutableMapOf<Position, Char>()
+    private val area = mutableMapOf<PositionDay15, Char>()
     private var minCol = Int.MAX_VALUE
     private var maxCol = Int.MIN_VALUE
     private var minLine = 0
@@ -35,7 +35,7 @@ class Cave(input: List<String>) {
                         line2 = tempY
                     }
                     for (l in line1..line2)
-                        area[Position(l, col1)] = '#'           // rock
+                        area[PositionDay15(l, col1)] = '#'           // rock
                 } else {
                     if (col1 > col2) {
                         val tempX = col1
@@ -43,7 +43,7 @@ class Cave(input: List<String>) {
                         col2 = tempX
                     }
                     for (col in col1..col2)
-                        area[Position(line1, col)] = '#'           // rock
+                        area[PositionDay15(line1, col)] = '#'           // rock
                 }
             }
         }
@@ -61,7 +61,7 @@ class Cave(input: List<String>) {
             desvio = isPossibleToFall(line, col)
         }
         return if (desvio == null) {
-            area[Position(lastLine, col)] = 'o'
+            area[PositionDay15(lastLine, col)] = 'o'
             grains++
             true
         } else
@@ -83,7 +83,7 @@ class Cave(input: List<String>) {
             line++
             desvio = isPossibleToFall(line, col)
         }
-        area[Position(lastLine, col)] = 'o'
+        area[PositionDay15(lastLine, col)] = 'o'
         grains++
         return true
     }
@@ -91,11 +91,11 @@ class Cave(input: List<String>) {
     private fun isPossibleToFall(line: Int, col: Int): Int? {
         if (line == floor)
             return null
-        if (area[Position(line, col)] == null)
+        if (area[PositionDay15(line, col)] == null)
             return 0
-        if (area[Position(line, col - 1)] == null)
+        if (area[PositionDay15(line, col - 1)] == null)
             return -1
-        if (area[Position(line, col + 1)] == null)
+        if (area[PositionDay15(line, col + 1)] == null)
             return 1
         return null
     }
@@ -105,7 +105,7 @@ class Cave(input: List<String>) {
         for (line in 1 until floor) {
             print("%3s ".format(line))
             for (col in minCol - 1..maxCol + 1) {
-                print(area[Position(line, col)] ?: ".")
+                print(area[PositionDay15(line, col)] ?: ".")
             }
             println()
         }
