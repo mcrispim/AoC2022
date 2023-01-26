@@ -1,17 +1,19 @@
-import java.util.LinkedList
-import java.util.TreeMap
-
 class VirtualIntSet {
-    private val intRangeList: MutableList<IntRange> = LinkedList()
+    var size = 0
+    private var head: Node? = null
 
-    fun add(ir: IntRange) {
-        if (intRangeList.isEmpty()) {
-            intRangeList.add(ir)
+    private inner class Node constructor(var element: IntRange, var next: Node?)
+
+    fun add(range: IntRange) {
+        if (range == null) {
+            head = Node(range, null)
+            size++
             return
+        } else {
+            val range = head
+            if (range.element.last <)
+                while (range.)
         }
-
-        val range = intRangeList.first()
-        while ()
     }
 
     override fun toString(): String {
